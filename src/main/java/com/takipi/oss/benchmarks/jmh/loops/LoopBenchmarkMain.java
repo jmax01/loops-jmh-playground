@@ -1,6 +1,7 @@
 package com.takipi.oss.benchmarks.jmh.loops;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -54,6 +55,11 @@ public class LoopBenchmarkMain {
         }
     }
 
+    /**
+     * Converted to true iterator
+     *
+     * @return the int
+     */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -62,8 +68,9 @@ public class LoopBenchmarkMain {
     @Warmup(iterations = 5)
     public int iteratorMaxInteger() {
         int max = Integer.MIN_VALUE;
-        for (Integer integer : this.integers) {
-            max = Integer.max(max, integer);
+        final Iterator<Integer> iterator = this.integers.iterator();
+        while (iterator.hasNext()) {
+            max = Integer.max(max, iterator.next());
         }
         return max;
     }
@@ -76,7 +83,10 @@ public class LoopBenchmarkMain {
     @Warmup(iterations = 5)
     public int forEachLoopMaxInteger() {
         int max = Integer.MIN_VALUE;
-        for (Integer n : this.integers) {
+
+        final List<Integer> ints = this.integers;
+
+        for (Integer n : ints) {
             max = Integer.max(max, n);
         }
         return max;
@@ -92,7 +102,9 @@ public class LoopBenchmarkMain {
         final Wrapper wrapper = new Wrapper();
         wrapper.inner = Integer.MIN_VALUE;
 
-        this.integers.forEach(i -> this.helper(i, wrapper));
+        final List<Integer> ints = this.integers;
+
+        ints.forEach(i -> this.helper(i, wrapper));
         return wrapper.inner.intValue();
     }
 
@@ -111,10 +123,39 @@ public class LoopBenchmarkMain {
     @Fork(2)
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
+    public int forEachLambdaMaxInteger2() {
+
+        final Wrapper2 wrapper2 = new Wrapper2();
+
+        final List<Integer> ints = this.integers;
+
+        ints.forEach(i -> this.helper(i, wrapper2));
+
+        return wrapper2.inner.intValue();
+    }
+
+    public static final class Wrapper2 {
+        public Integer inner = Integer.MIN_VALUE;
+    }
+
+    private int helper(final int i, final Wrapper2 wrapper) {
+        wrapper.inner = Math.max(i, wrapper.inner);
+        return wrapper.inner;
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
     public int forMaxInteger() {
         int max = Integer.MIN_VALUE;
+
+        final List<Integer> ints = this.integers;
+
         for (int i = 0; i < LoopBenchmarkMain.size; i++) {
-            max = Integer.max(max, this.integers.get(i));
+            max = Integer.max(max, ints.get(i));
         }
         return max;
     }
@@ -126,7 +167,10 @@ public class LoopBenchmarkMain {
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
     public int parallelStreamMaxInteger() {
-        Optional<Integer> max = this.integers.parallelStream()
+
+        final List<Integer> ints = this.integers;
+
+        Optional<Integer> max = ints.parallelStream()
             .reduce(Integer::max);
         return max.get();
     }
@@ -152,7 +196,10 @@ public class LoopBenchmarkMain {
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
     public int parallelIntStreamMaxInteger() {
-        return this.integers.parallelStream()
+
+        final List<Integer> ints = this.integers;
+
+        return ints.parallelStream()
             .mapToInt(e -> e)
             .max()
             .getAsInt();
@@ -165,7 +212,10 @@ public class LoopBenchmarkMain {
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
     public int streamMaxInteger() {
-        Optional<Integer> max = this.integers.stream()
+
+        final List<Integer> ints = this.integers;
+
+        Optional<Integer> max = ints.stream()
             .reduce(Integer::max);
         return max.get();
     }
@@ -176,8 +226,27 @@ public class LoopBenchmarkMain {
     @Fork(2)
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
+    public int intStreamMaxInteger() {
+
+        final List<Integer> ints = this.integers;
+
+        return ints.stream()
+            .mapToInt(e -> e)
+            .max()
+            .getAsInt();
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
     public int lambdaMaxInteger() {
-        return this.integers.stream()
+
+        final List<Integer> ints = this.integers;
+
+        return ints.stream()
             .reduce(Integer.MIN_VALUE, (a, b) -> Integer.max(a, b));
     }
 }
