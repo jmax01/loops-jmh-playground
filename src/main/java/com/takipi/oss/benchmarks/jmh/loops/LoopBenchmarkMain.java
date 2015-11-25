@@ -1,7 +1,6 @@
 package com.takipi.oss.benchmarks.jmh.loops;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -18,131 +17,167 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
+@SuppressWarnings("javadoc")
 @State(Scope.Benchmark)
 public class LoopBenchmarkMain {
-	volatile int size = 100000;
-	volatile List<Integer> integers = null;
 
-	public static void main(String[] args) {
-		LoopBenchmarkMain benchmark = new LoopBenchmarkMain();
-		benchmark.setup();
-		
-		System.out.println("iteratorMaxInteger max is: " + benchmark.iteratorMaxInteger());
-		System.out.println("forEachLoopMaxInteger max is: " + benchmark.forEachLoopMaxInteger());
-		System.out.println("forEachLambdaMaxInteger max is: " + benchmark.forEachLambdaMaxInteger());
-		System.out.println("forMaxInteger max is: " + benchmark.forMaxInteger());
-		System.out.println("parallelStreamMaxInteger max is: " + benchmark.parallelStreamMaxInteger());
-		System.out.println("streamMaxInteger max is: " + benchmark.streamMaxInteger());
-		System.out.println("iteratorMaxInteger max is: " + benchmark.lambdaMaxInteger());
-	}
-	
-	@Setup
-	public void setup() {
-		integers = new ArrayList<Integer>(size);
-		populate(integers);
-	}
+    static final int size = 100000;
+    // volatile int size = 100000;
 
-	public void populate(List<Integer> list) {
-		Random random = new Random();
-		for (int i = 0; i < size; i++) {
-			list.add(random.nextInt(1000000));
-		}
-	}
+    volatile List<Integer> integers = null;
 
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int iteratorMaxInteger() {
-		int max = Integer.MIN_VALUE;
-		for (Iterator<Integer> it = integers.iterator(); it.hasNext(); ) {
-			max = Integer.max(max, it.next());
-		}
-		return max;
-	}
+    public static void main(String[] args) {
+        LoopBenchmarkMain benchmark = new LoopBenchmarkMain();
+        benchmark.setup();
 
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int forEachLoopMaxInteger() {
-		int max = Integer.MIN_VALUE;
-		for (Integer n : integers) {
-			max = Integer.max(max, n);
-		}
-		return max;
-	}
-	
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int forEachLambdaMaxInteger() {
-		final Wrapper wrapper = new Wrapper();
-		wrapper.inner = Integer.MIN_VALUE;
-		
-		integers.forEach(i -> helper(i, wrapper));
-		return wrapper.inner.intValue();
-	}
-	
-	public static class Wrapper {
-		public Integer inner; 
-	}
-	
-	private int helper(int i, Wrapper wrapper) {
-		wrapper.inner = Math.max(i, wrapper.inner);
-		return wrapper.inner;
-	}
-	
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int forMaxInteger() {
-		int max = Integer.MIN_VALUE;
-		for (int i = 0; i < size; i++) {
-			max = Integer.max(max, integers.get(i));
-		}
-		return max;
-	}
+        System.out.println("iteratorMaxInteger max is: " + benchmark.iteratorMaxInteger());
+        System.out.println("forEachLoopMaxInteger max is: " + benchmark.forEachLoopMaxInteger());
+        System.out.println("forEachLambdaMaxInteger max is: " + benchmark.forEachLambdaMaxInteger());
+        System.out.println("forMaxInteger max is: " + benchmark.forMaxInteger());
+        System.out.println("parallelStreamMaxInteger max is: " + benchmark.parallelStreamMaxInteger());
+        System.out.println("streamMaxInteger max is: " + benchmark.streamMaxInteger());
+        System.out.println("iteratorMaxInteger max is: " + benchmark.lambdaMaxInteger());
 
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int parallelStreamMaxInteger() {
-		Optional<Integer> max = integers.parallelStream().reduce(Integer::max);
-		return max.get();
-	}
+        System.out.println("iteratorMaxInteger max is: " + benchmark.parallelIntStreamMaxInteger());
+    }
 
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int streamMaxInteger() {
-		Optional<Integer> max = integers.stream().reduce(Integer::max);
-		return max.get();
-	}
-	
-	@Benchmark
-	@BenchmarkMode(Mode.AverageTime)
-	@OutputTimeUnit(TimeUnit.MILLISECONDS)
-	@Fork(2)
-	@Measurement(iterations = 5)
-	@Warmup(iterations = 5)
-	public int lambdaMaxInteger() {
-		return integers.stream().reduce(Integer.MIN_VALUE, (a, b) -> Integer.max(a, b));
-	}
+    @Setup
+    public void setup() {
+        this.integers = new ArrayList<Integer>(LoopBenchmarkMain.size);
+        this.populate(this.integers);
+    }
+
+    public void populate(List<Integer> list) {
+        Random random = new Random();
+        for (int i = 0; i < LoopBenchmarkMain.size; i++) {
+            list.add(random.nextInt(1000000));
+        }
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int iteratorMaxInteger() {
+        int max = Integer.MIN_VALUE;
+        for (Integer integer : this.integers) {
+            max = Integer.max(max, integer);
+        }
+        return max;
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int forEachLoopMaxInteger() {
+        int max = Integer.MIN_VALUE;
+        for (Integer n : this.integers) {
+            max = Integer.max(max, n);
+        }
+        return max;
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int forEachLambdaMaxInteger() {
+        final Wrapper wrapper = new Wrapper();
+        wrapper.inner = Integer.MIN_VALUE;
+
+        this.integers.forEach(i -> this.helper(i, wrapper));
+        return wrapper.inner.intValue();
+    }
+
+    public static class Wrapper {
+        public Integer inner;
+    }
+
+    private int helper(int i, Wrapper wrapper) {
+        wrapper.inner = Math.max(i, wrapper.inner);
+        return wrapper.inner;
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int forMaxInteger() {
+        int max = Integer.MIN_VALUE;
+        for (int i = 0; i < LoopBenchmarkMain.size; i++) {
+            max = Integer.max(max, this.integers.get(i));
+        }
+        return max;
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int parallelStreamMaxInteger() {
+        Optional<Integer> max = this.integers.parallelStream()
+            .reduce(Integer::max);
+        return max.get();
+    }
+
+    /**
+     * <pre>
+     * LoopBenchmarkMain.forEachLambdaMaxInteger      avgt   10  0.528 ± 0.013  ms/op
+     * LoopBenchmarkMain.forEachLoopMaxInteger        avgt   10  0.119 ± 0.008  ms/op
+     * LoopBenchmarkMain.forMaxInteger                avgt   10  0.217 ± 0.003  ms/op
+     * LoopBenchmarkMain.iteratorMaxInteger           avgt   10  0.124 ± 0.004  ms/op
+     * LoopBenchmarkMain.lambdaMaxInteger             avgt   10  0.533 ± 0.023  ms/op
+     * LoopBenchmarkMain.parallelIntStreamMaxInteger  avgt   10  0.106 ± 0.009  ms/op
+     * LoopBenchmarkMain.parallelStreamMaxInteger     avgt   10  0.426 ± 0.096  ms/op
+     * LoopBenchmarkMain.streamMaxInteger             avgt   10  0.634 ± 0.009  ms/op
+     * </pre>
+     *
+     * @return the int
+     */
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int parallelIntStreamMaxInteger() {
+        return this.integers.parallelStream()
+            .mapToInt(e -> e)
+            .max()
+            .getAsInt();
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int streamMaxInteger() {
+        Optional<Integer> max = this.integers.stream()
+            .reduce(Integer::max);
+        return max.get();
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Fork(2)
+    @Measurement(iterations = 5)
+    @Warmup(iterations = 5)
+    public int lambdaMaxInteger() {
+        return this.integers.stream()
+            .reduce(Integer.MIN_VALUE, (a, b) -> Integer.max(a, b));
+    }
 }
